@@ -27,7 +27,7 @@ client.on('qr', (qr) => {
 client.on('ready', () => {
     roboConectado = true;
     qrCodeAtual = "";
-    console.log('🤖 Robô do WhatsApp CONECTADO nas nuvens!');
+    console.log('🤖 Robô do WhatsApp CONECTADO nas nuvens! V@');
 });
 
 client.initialize();
