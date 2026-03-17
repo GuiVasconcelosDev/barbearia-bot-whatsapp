@@ -5,11 +5,12 @@ const qrcode = require('qrcode-terminal');
 const app = express();
 app.use(express.json());
 
-// 1. Configura o robô para a Nuvem (Linux sem tela)
+// 1. Configura o robô para usar o Chromium robusto do Linux
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
-        args: ['--no-sandbox', '--disable-setuid-sandbox'] // <-- OBRIGATÓRIO PARA O RAILWAY
+        executablePath: '/usr/bin/chromium', // <-- APONTA PARA O NAVEGADOR NOVO!
+        args: ['--no-sandbox', '--disable-setuid-sandbox']
     }
 });
 
@@ -38,7 +39,6 @@ app.post('/api/enviar', async (req, res) => {
     }
 });
 
-// 2. A porta dinâmica da Nuvem
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
     console.log(`🚀 Servidor do Robô rodando na porta ${PORT}`);
