@@ -71,8 +71,19 @@ app.get('/', (req, res) => {
 // ==========================================
 // ROTA ONDE O JAVA VAI BATER PARA ENVIAR A MENSAGEM
 // ==========================================
+// ROTA COM TRAVA DE SEGURANÇA
 app.post('/api/enviar', async (req, res) => {
     const { telefone, mensagem } = req.body;
+
+    // 1. Verifica se o robô está realmente pronto
+    if (!roboConectado) {
+        console.error(`⚠️ Tentativa de envio para ${telefone} falhou: Robô não está conectado.`);
+        return res.status(400).json({ 
+            sucesso: false, 
+            erro: "O Robô ainda não está conectado. Por favor, acesse o link e escaneie o QR Code." 
+        });
+    }
+
     const numeroFormatado = `${telefone}@c.us`;
 
     try {
@@ -83,9 +94,4 @@ app.post('/api/enviar', async (req, res) => {
         console.error(`❌ Erro ao enviar para ${telefone}:`, erro);
         res.status(500).json({ sucesso: false, erro: erro.message });
     }
-});
-
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-    console.log(`🚀 Servidor do Robô rodando na porta ${PORT}`);
 });
