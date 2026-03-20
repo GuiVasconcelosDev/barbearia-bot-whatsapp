@@ -64,7 +64,17 @@ app.get('/', (req, res) => {
 // ROTA DE ENVIO (Onde o Java bate)
 // ==========================================
 app.post('/api/enviar', async (req, res) => {
+
+    const CHAVE_SECRETA = "eu-era-feliz-antes-de-2006";
+
+    const chaveRecebida = req.headers['x-api-key'];
+    if (chaveRecebida !== CHAVE_SECRETA) {
+        console.error("⚠️ ALERTA: Tentativa de envio bloqueada (Chave Invalida).");
+        return res.status(401).json({sucesso: false, erro: "Acesso negado"});
+    }
+
     const { telefone, mensagem } = req.body;
+    
 
     if (!roboConectado) {
         console.error(`⚠️ Bloqueado: Robô não está conectado.`);
