@@ -1,6 +1,9 @@
 const express = require('express');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 
+// 1. NOVA IMPORTAÇÃO: O Cérebro do Google Gemini
+const { GoogleGenerativeAI } = require("@google/generative-ai"); 
+
 const app = express();
 app.use(express.json());
 
@@ -8,7 +11,11 @@ app.use(express.json());
 let qrCodeAtual = "";
 let roboConectado = false;
 
-// 1. Configura o robô
+// 2. INICIALIZA A IA (Coloque a sua chave real aqui dentro das aspas)
+const genAI = new GoogleGenerativeAI("AIzaSyDyebgeQZSpKuMUzlONYNdzzbfREQsRevQ");
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+// Configura o robô
 const client = new Client({
     authStrategy: new LocalAuth(),
     puppeteer: {
@@ -18,17 +25,49 @@ const client = new Client({
     }
 });
 
-// 2. Evento de QR Code
+// Evento de QR Code
 client.on('qr', (qr) => {
     qrCodeAtual = qr;
     console.log('📱 Novo QR Code gerado!');
 });
 
-// 3. Evento de Pronto
+// Evento de Pronto
 client.on('ready', () => {
     roboConectado = true;
     qrCodeAtual = "";
     console.log('🤖 Robô do WhatsApp CONECTADO!');
+});
+
+// ==========================================
+// 🧠 CÉREBRO DA IA (Ouvindo e Respondendo)
+// ==========================================
+client.on('message', async msg => {
+    // Trava de Segurança: Ignora status e evita que o robô responda a si mesmo
+    if (msg.from === 'status@broadcast' || msg.fromMe) return;
+
+    const mensagemCliente = msg.body;
+    console.log(`🗣️ Mensagem recebida: ${mensagemCliente}`);
+
+    try {
+        // O Prompt de Personalidade (O "treinamento" rápido da IA)
+        const prompt = `Você é o recepcionista virtual de uma barbearia moderna. 
+        O seu objetivo é atender o cliente de forma simpática e rápida. 
+        Use um tom amigável, como "Fala meu querido", "Mestre", "Campeão".
+        Responda de forma curta (máximo de 2 parágrafos).
+        O cliente acabou de enviar esta mensagem no WhatsApp: "${mensagemCliente}"
+        Responda ao cliente:`;
+
+        // A IA pensa...
+        const result = await model.generateContent(prompt);
+        const respostaIA = result.response.text();
+
+        // O robô responde no WhatsApp
+        await msg.reply(respostaIA);
+        console.log(`🤖 IA respondeu: ${respostaIA}`);
+
+    } catch (error) {
+        console.error("❌ Erro no cérebro do Gemini:", error);
+    }
 });
 
 client.initialize();
@@ -41,7 +80,7 @@ app.get('/', (req, res) => {
         return res.send(`
             <div style="text-align: center; margin-top: 100px; font-family: sans-serif;">
                 <h1 style="color: #10b981;">✅ Robô Conectado!</h1>
-                <p>O sistema de lembretes está ativo.</p>
+                <p>O sistema de lembretes e a IA estão ativos.</p>
             </div>
         `);
     }
@@ -75,7 +114,6 @@ app.post('/api/enviar', async (req, res) => {
 
     const { telefone, mensagem } = req.body;
     
-
     if (!roboConectado) {
         console.error(`⚠️ Bloqueado: Robô não está conectado.`);
         return res.status(400).json({ sucesso: false, erro: "Robô desconectado" });
@@ -85,7 +123,7 @@ app.post('/api/enviar', async (req, res) => {
 
     try {
         await client.sendMessage(numeroFormatado, mensagem);
-        console.log(`✅ Enviado para ${telefone}`);
+        console.log(`✅ Lembrete enviado para ${telefone}`);
         res.status(200).json({ sucesso: true });
     } catch (erro) {
         console.error(`❌ Erro ao enviar:`, erro);
