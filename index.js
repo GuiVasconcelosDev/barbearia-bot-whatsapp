@@ -21,7 +21,13 @@ const client = new Client({
     puppeteer: {
         // Este caminho deve bater com o que está no seu Dockerfile
         executablePath: '/usr/bin/chromium', 
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
+        args: [
+            '--no-sandbox', 
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage', // ⬅️ A MÁGICA ESTÁ AQUI (Evita o Crash de Memória do Railway)
+            '--disable-accelerated-2d-canvas', // ⬅️ Deixa o robô mais leve
+            '--disable-gpu' // ⬅️ Servidores não têm placa de vídeo
+        ]
     }
 });
 
