@@ -13,7 +13,7 @@ let roboConectado = false;
 
 // 2. INICIALIZA A IA (Coloque a sua chave real aqui dentro das aspas)
 const genAI = new GoogleGenerativeAI("AIzaSyDyebgeQZSpKuMUzlONYNdzzbfREQsRevQ");
-const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 // Configura o robô
 const client = new Client({
