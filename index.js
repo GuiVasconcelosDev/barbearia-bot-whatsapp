@@ -1,10 +1,11 @@
+require('dotenv').config();
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-// Certifique-se de que tem o 'node-fetch' ou usa o fetch nativo do Node 18+
+
 const API_JAVA_URL = "https://barbearia-saas-api-production.up.railway.app"; 
 
-const genAI = new GoogleGenerativeAI("AIzaSyDyebgeQZSpKuMUzlONYNdzzbfREQsRevQ");
+const genAI = new GoogleGenerativeAI(process.env.numtemchave);
 
-// 1. AS FERRAMENTAS (Explicamos ao Gemini o que ele pode fazer)
+
 const ferramentasSaaS = [{
     functionDeclarations: [
         {
@@ -75,7 +76,7 @@ const funcoesReais = {
     }
 };
 
-// 3. O CÉREBRO EM AÇÃO (Ouvindo o WhatsApp)
+
 client.on('message', async msg => {
     if (msg.from === 'status@broadcast' || msg.author) return;
 
@@ -83,20 +84,24 @@ client.on('message', async msg => {
     const telefoneCliente = msg.from.replace(/\D/g, ''); // Limpa o número
 
     try {
-        // Iniciamos a conversa com o cliente
+        
         const chat = model.startChat({
             systemInstruction: `Você é o recepcionista virtual de uma barbearia. 
             O cliente chama-se (ou tem o WhatsApp) ${telefoneCliente}.
             Seja simpático e natural. Se ele perguntar horários, USE A FERRAMENTA consultar_horarios_livres.
             Se ele quiser marcar, recolha o nome dele e USE A FERRAMENTA marcar_agendamento. 
-            O ID da barbearia é 1, do serviço padrão é 1 e do barbeiro é 1.`
+            O ID da barbearia é 1, do serviço padrão é 1 e do barbeiro é 1.
+            [REGRAS OBRIGATORIAS]
+            1. que todo xingamento seja devolvido para o usuario de forma light.
+            2. que usuario possa ser informado os cortes disponiveis que está no banco de dados.
+            3. sempre memorize o termino da conversa para encerrar de vez.`
         });
 
-        // Enviamos a mensagem do WhatsApp para a IA
+        
         let result = await chat.sendMessage(mensagemCliente);
         let response = result.response;
 
-        // VERIFICAMOS SE A IA QUER USAR UMA FERRAMENTA (Function Calling)
+        
         const functionCall = response.functionCalls ? response.functionCalls[0] : null;
 
         if (functionCall) {
@@ -117,7 +122,7 @@ client.on('message', async msg => {
             response = result.response;
         }
 
-        // Finalmente, enviamos a resposta em texto da IA para o WhatsApp do cliente
+        
         await msg.reply(response.text());
 
     } catch (error) {
